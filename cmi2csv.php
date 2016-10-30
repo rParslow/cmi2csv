@@ -8,7 +8,6 @@
 
 
 // Debug can have parameters subtrace var lines
-# zip works only with debug
  $debug = 'subtrace var lines';
 
 
@@ -19,7 +18,7 @@
  $cmi_help    = "Convertisseur de fichier CMI vers CSV.";
  $cmi_end     = '---';
  $cmi_license = "The unLicence";
- $cmi_version = "3.03";
+ $cmi_version = "3.05";
 
 // default values
  $maxfields   = 14;
@@ -77,7 +76,7 @@
     #3.x Moved after account 
     #$out = implode( $sep, $champcible )."\n";
 	
-    $destfile = substr($_FILES['uploadedfile']['name'], 0, strrpos($_FILES['uploadedfile']['name'], '.')).$ext;
+    $destfile = substr($_FILES['uploadedfile']['name'], 0, strrpos($_FILES['uploadedfile']['name'], '.'));
 
     // traitement du fichier CMI
     if (preg_match('/lines/', $debug))
@@ -245,21 +244,6 @@
 		} //end for
 	}
 
-	// export file as CSV
-	if (preg_match('/var/', $debug)) {
-		echo "<br><br>Debug:Var:$i lines processed, output size=".strlen($out);
-    } else {
-	    header("Content-Disposition: attachment; filename=\"$destfile\"");
-	    header("Content-Type: application/vnd.ms-excel");		
-//	    header("Content-Type: application/force-download"); 
-//	    header("Content-Transfer-Encoding: $type\n"); // Surtout ne pas enlever le \n
-//	    header("Content-Length: ".strlen($out) ); 
-	    header("Pragma: no-cache"); 
-	    header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public"); 
-	    header("Expires: 0"); 
-	    echo $out;
-    }
-
 
     if (preg_match('/var/', $debug)) {
 	    echo "<br><br>ziplist=";
@@ -292,13 +276,39 @@
     // delete csv generated from cmi file 
     array_map('unlink', $ziplist);
 
-/*
-$zipfile="tmp/archive.zip" //file location 
-header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename="'.basename($zipfile).'"'); 
-header('Content-Length: ' . filesize($zipfile));
-readfile($file);
-*/
+	// get result - show debug or dowload file
+	if (preg_match('/var/', $debug)) {
+        // warning in debug mode zip file isn't deleted
+		echo "<br><br>Debug:Var:$i lines processed. <br><br><br>";
+		echo '<a href="/'.$tmpdir.$zipfile.'"><b>Download file</b></a><br><br>';
+
+    } elseif(false) {
+        // heritage - left in case we want to outpout CSV if only one account
+
+	    header("Content-Disposition: attachment; filename=\"$destfile.$ext\"");
+	    header("Content-Type: application/vnd.ms-excel");		
+        //header("Content-Type: application/force-download"); 
+        //header("Content-Transfer-Encoding: $type\n"); // Surtout ne pas enlever le \n
+        //header("Content-Length: ".strlen($out) ); 
+	    header("Pragma: no-cache"); 
+	    header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public"); 
+	    header("Expires: 0"); 
+
+	    echo $out;
+    } else {
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="'.$destfile.'.zip"'); 
+        #header('Content-Length: ' . filesize($tmpdir.$zipfile));
+	    header("Pragma: no-cache"); 
+	    header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public"); 
+	    header("Expires: 0"); 
+
+        readfile($tmpdir.$zipfile);
+
+        unlink($tmpdir.$zipfile);
+
+    }
 
 	die(0);
 }
