@@ -19,7 +19,7 @@
  $cmi_help    = "Convertisseur de fichier CMI vers CSV.";
  $cmi_end     = '---';
  $cmi_license = "The unLicence";
- $cmi_version = "3.02";
+ $cmi_version = "3.03";
 
 // default values
  $maxfields   = 14;
@@ -355,10 +355,14 @@ function create_zip($files, $destination = '', $overwrite = true) {
         //create the archive
         $zip = new ZipArchive();
 
+     /* works on php 5.5 not in php 5.6 and greater - should be fixed
         if($zip->open($destination, $overwrite ? ZIPARCHIVE::OVERWRITE : ZIPARCHIVE::CREATE) !== true) {
-# Doesn't work in PHP 5.6 / 7.0 
             return false;
         }
+     */
+        // fix for php >= 5.6 - we already deleted any prior zip file 
+        $zip->open($destination, ZipArchive::CREATE); 
+
 
         //add the files
         foreach($valid_files as $file) {
