@@ -1,7 +1,8 @@
 ## Ignore files
 # main file
-.ovhconfig
+robots.txt
 index.html
+.ovhconfig
 # Config files
 # tmp files
 tmp/*

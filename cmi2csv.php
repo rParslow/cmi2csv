@@ -8,7 +8,8 @@
 
 
 // Debug can have parameters subtrace var lines
- $debug = 'subtrace var lines';
+ #$debug = 'subtrace var lines';
+ $debug  = '';
 
 
 // html parameters 
@@ -18,7 +19,7 @@
  $cmi_help    = "Convertisseur de fichier CMI vers CSV.";
  $cmi_end     = '---';
  $cmi_license = "The unLicence";
- $cmi_version = "3.05";
+ $cmi_version = "3.06";
 
 // default values
  $maxfields   = 14;
