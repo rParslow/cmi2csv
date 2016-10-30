@@ -1,0 +1,8 @@
+## Ignore files
+# main file
+.ovhconfig
+index.html
+# Config files
+# tmp files
+tmp/*
+# End
