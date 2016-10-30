@@ -18,7 +18,8 @@
  $cmi_help    = "Convertisseur de fichier CMI vers CSV.";
  $cmi_end     = '---';
  $cmi_license = "The unLicence";
- $cmi_version = "3.07";
+ $cmi_version = "3.10";
+
 
 // default values
  $maxfields   = 14;
@@ -28,7 +29,7 @@
  $sep         = ";";
  $enclosure   = '"';
  $escape_c    = "\\" ;
- $champs      = array("--","ChampVide", "Date", "Libelle", "DebitCredit","Debit" ,"Credit","Compte","Reference","Debug");
+ $champs      = array("--","ChampVide", "Date", "Libelle", "Libelle2", "LibelleComplet", "DebitCredit","Debit" ,"Credit","Compte","Reference","Debug");
  $champsdef   = array("ChampVide","ChampVide","ChampVide","ChampVide","ChampVide","ChampVide","Date","Date","ChampVide","ChampVide","Libelle","Debit","Credit");
 
 //
@@ -125,6 +126,7 @@
                         $out .= "Number:".trim(substr( $file[$l], 1 ))."\n"; 
 
                     } else if ('|' == trim($file[$l])) { // we have almost a line
+					    unset($date, $deb, $cred, $debcred, $lib, $lib2, $reference);
                         --$l;
 	                    $out .= implode( $sep, $champcible )."\n";
                         if ('CRLF' == $lf)  stream_filter_register('crlf', 'crlf_filter');
@@ -186,6 +188,21 @@
                                 array_push($new_data, $lib);
 								break;
 
+							case 'Libelle2':
+								$new_line .= $lib2.$sep;
+                                array_push($new_data, $lib2);
+								break;
+
+							case 'LibelleComplet':
+								if (empty($lib2)) {
+                                    $new_line .= $lib.$sep;
+                                    array_push($new_data, $lib);
+								} else {
+                                    $new_line .= $lib.' '.$lib2.$sep;
+                                    array_push($new_data, $lib.' '.$lib2);
+                                }
+								break;
+
 							case 'Compte':
 								$new_line .= $acc_nbr.$sep;
                                 array_push($new_data, $acc_nbr);
@@ -225,7 +242,7 @@
                         fputcsv($fp, $new_data, $sep, $enclosure, $escape_c);
 
                         // unset the line variables to avoid side effects
-					    unset($date, $deb, $cred, $debcred, $lib, $reference);
+					    unset($date, $deb, $cred, $debcred, $lib, $lib2, $reference);
                     }
 				}
 
@@ -241,7 +258,13 @@
 				$lib = trim(substr( $line, 1 ));
 
 				if (preg_match('/subtrace/', $debug))
-                    echo "<br>^L date= $lib</br>";
+                    echo "<br>^L description= $lib</br>";
+
+			} else if (preg_match("/^C/", $line)) {  // description2 
+				$lib2 = trim(substr( $line, 1 ));
+
+				if (preg_match('/subtrace/', $debug))
+                    echo "<br>^L^C description= $lib $lib2</br>";
 
 			} else if (preg_match("/^M/", $line)) {  // ammount 
 				$debcred = trim(substr( $line, 1 ));
@@ -433,8 +456,8 @@ function create_zip($files, $destination = '', $overwrite = true) {
 <input type="hidden" name="MAX_FILE_SIZE" value="500000" />
 
 1. D&eacute;finir les champs du fichier CSV apr&egrave;s conversion&nbsp;:(
-<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Date&champcible%5B1%5D=Debit&champcible%5B2%5D=Credit&champcible%5B3%5D=Libelle&champcible%5B4%5D=--&champcible%5B5%5D=--&champcible%5B6%5D=--&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">standard</a>
-<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Debug&champcible%5B1%5D=Compte&champcible%5B2%5D=Reference&champcible%5B3%5D=Date&champcible%5B4%5D=Debit&champcible%5B5%5D=Credit&champcible%5B6%5D=Libelle&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">Debug</a>
+<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Date&champcible%5B1%5D=Debit&champcible%5B2%5D=Credit&champcible%5B3%5D=LibelleComplet&champcible%5B4%5D=--&champcible%5B5%5D=--&champcible%5B6%5D=--&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">standard</a>
+<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Debug&champcible%5B1%5D=Compte&champcible%5B2%5D=Reference&champcible%5B3%5D=Date&champcible%5B4%5D=Debit&champcible%5B5%5D=Credit&champcible%5B6%5D=Libelle&champcible%5B7%5D=Libelle2&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">Debug</a>
 
 )<br \>
 <?php
@@ -491,7 +514,7 @@ else
 <p>
  <br><br>
  <hr>
- <? echo "CMI2CSV Version $cmi_version - $cmi_curl"; ?><br>
+ <? echo "CMI2CSV Version $cmi_version - <a href='$cmi_curl'>$cmi_curl</a>"; ?><br>
  <? echo $cmi_help; ?><br>
  Licence: <? echo $cmi_license; ?><br>
 <? echo $cmi_end; ?>
