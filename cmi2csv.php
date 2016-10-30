@@ -8,9 +8,8 @@
 
 
 // Debug can have parameters subtrace var lines
- #$debug = 'subtrace var lines';
  $debug  = '';
-
+ #$debug = 'subtrace var lines';
 
 // html parameters 
  $cmi_title   = "Convertisseur CMI";
@@ -19,7 +18,7 @@
  $cmi_help    = "Convertisseur de fichier CMI vers CSV.";
  $cmi_end     = '---';
  $cmi_license = "The unLicence";
- $cmi_version = "3.06";
+ $cmi_version = "3.07";
 
 // default values
  $maxfields   = 14;
@@ -29,7 +28,7 @@
  $sep         = ";";
  $enclosure   = '"';
  $escape_c    = "\\" ;
- $champs      = array("--","ChampVide", "Date", "Libelle", "DebitCredit","Debit" ,"Credit");
+ $champs      = array("--","ChampVide", "Date", "Libelle", "DebitCredit","Debit" ,"Credit","Compte","Reference","Debug");
  $champsdef   = array("ChampVide","ChampVide","ChampVide","ChampVide","ChampVide","ChampVide","Date","Date","ChampVide","ChampVide","Libelle","Debit","Credit");
 
 //
@@ -187,6 +186,21 @@
                                 array_push($new_data, $lib);
 								break;
 
+							case 'Compte':
+								$new_line .= $acc_nbr.$sep;
+                                array_push($new_data, $acc_nbr);
+								break;
+
+							case 'Reference':
+								$new_line .= $reference.$sep;
+                                array_push($new_data, $reference);
+								break;
+
+							case 'Debug':
+								$new_line .= $line[0].$sep;
+                                array_push($new_data, $line[0]);
+								break;
+
 							default:
 								$new_line .= $sep;
                                 array_push($new_data, '');
@@ -206,10 +220,13 @@
                         echo "<br>";
                     }
 
-                    // write the line
-                    fputcsv($fp, $new_data, $sep, $enclosure, $escape_c);
+                    if (!empty($reference)) { //to avoid blank line in accounts
+                        // write the line
+                        fputcsv($fp, $new_data, $sep, $enclosure, $escape_c);
 
-					unset ($date, $deb, $cred, $debcred, $lib);
+                        // unset the line variables to avoid side effects
+					    unset($date, $deb, $cred, $debcred, $lib, $reference);
+                    }
 				}
 
 				$i++; // count records
@@ -228,10 +245,16 @@
 
 			} else if (preg_match("/^M/", $line)) {  // ammount 
 				$debcred = trim(substr( $line, 1 ));
-				if ($debcred >= 0)
+				if ($debcred >= 0) {
 					$cred = $debcred;
-				else
-					$deb = $debcred;
+					$deb  = '';
+				} else {
+					$deb  = $debcred;
+					$cred = '';
+				}
+
+            } else if (preg_match("/^F/", $line)) {   // Reference 
+                $reference = trim(substr( $line, 1 )); 
 
 			} else if (']' == trim($line)) {         // end of account
 				if (preg_match('/subtrace/', $debug)) {
@@ -409,7 +432,11 @@ function create_zip($files, $destination = '', $overwrite = true) {
 <form enctype="multipart/form-data" action="<?php echo basename($_SERVER['PHP_SELF']); ?>" method="POST">
 <input type="hidden" name="MAX_FILE_SIZE" value="500000" />
 
-1. D&eacute;finir les champs du fichier CSV apr&egrave;s conversion&nbsp;:(<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Date&champcible%5B1%5D=Debit&champcible%5B2%5D=Credit&champcible%5B3%5D=Libelle&champcible%5B4%5D=--&champcible%5B5%5D=--&champcible%5B6%5D=--&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">exemple</a>)<br \>
+1. D&eacute;finir les champs du fichier CSV apr&egrave;s conversion&nbsp;:(
+<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Date&champcible%5B1%5D=Debit&champcible%5B2%5D=Credit&champcible%5B3%5D=Libelle&champcible%5B4%5D=--&champcible%5B5%5D=--&champcible%5B6%5D=--&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">standard</a>
+<a href="<?php echo basename($_SERVER['PHP_SELF']); ?>?champcible%5B0%5D=Debug&champcible%5B1%5D=Compte&champcible%5B2%5D=Reference&champcible%5B3%5D=Date&champcible%5B4%5D=Debit&champcible%5B5%5D=Credit&champcible%5B6%5D=Libelle&champcible%5B7%5D=--&champcible%5B8%5D=--&champcible%5B9%5D=--&champcible%5B10%5D=--&champcible%5B11%5D=--&champcible%5B12%5D=--&champcible%5B13%5D=--&sep=;&lf=CRLF">Debug</a>
+
+)<br \>
 <?php
 for ($i = 0; $i < $maxfields; $i++) {
 	echo "<select name='champcible[$i]'>\n";
